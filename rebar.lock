@@ -1,0 +1,16 @@
+{"1.2.0",
+[{<<"fs">>,{pkg,<<"fs">>,<<"6.1.1">>},1},
+ {<<"markdown">>,
+  {git,"https://github.com/ferd/erlmarkdown.git",
+       {ref,"e0bceb58948ae4e53d4619856db4a0ab4d8d0d9a"}},
+  0},
+ {<<"sync">>,
+  {git,"https://github.com/rustyio/sync.git",
+       {ref,"4e909f69d3d0db21a6d7128b20748819e415c9eb"}},
+  0}]}.
+[
+{pkg_hash,[
+ {<<"fs">>, <<"9D147B944D60CFA48A349F12D06C8EE71128F610C90870BDF9A6773206452ED0">>}]},
+{pkg_hash_ext,[
+ {<<"fs">>, <<"EF94E95FFE79916860649FED80AC62B04C322B0BB70F5128144C026B4D171F8B">>}]}
+].

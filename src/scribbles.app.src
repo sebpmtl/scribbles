@@ -1,0 +1,15 @@
+{application, scribbles, [
+    {description, "An OTP application"},
+    {vsn, "0.1.0"},
+    {registered, []},
+    {mod, {scribbles_app, []}},
+    {applications, [
+        kernel,
+        stdlib,
+        markdown
+    ]},
+    {env, []},
+    {modules, []},
+    {licenses, ["Apache-2.0"]},
+    {links, []}
+ ]}.
