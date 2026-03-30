@@ -16,8 +16,13 @@ init([]) ->
     {ok, #{}}.
 
 handle_cast(build, State) ->
-    %% Call your existing module here
-    scribbles_markdown:run_build(), 
+    case code:load_file(scribbles_markdown) of
+        {module, scribbles_markdown} ->
+            ok;
+        {error, Reason} ->
+            io:format("Builder: failed reloading scribbles_markdown: ~p~n", [Reason])
+    end,
+    scribbles_markdown:run_build(),
     {noreply, State}.
 
 handle_call(_Request, _From, State) -> {reply, ok, State}.
