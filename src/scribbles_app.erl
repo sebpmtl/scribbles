@@ -1,6 +1,6 @@
 %%%-------------------------------------------------------------------
-%% @doc scribbles public API
-%% @end
+%%%  scribbles public API
+%%%   This is the entry point for our application. It starts the supervision tree.
 %%%-------------------------------------------------------------------
 
 -module(scribbles_app).

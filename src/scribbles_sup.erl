@@ -1,6 +1,7 @@
 %%%-------------------------------------------------------------------
-%% @doc scribbles top level supervisor.
-%% @end
+%%% scribbles top level supervisor.
+%%% This is the root of our supervision tree. It starts the watcher and builder.
+%%% 
 %%%-------------------------------------------------------------------
 
 -module(scribbles_sup).

@@ -7,6 +7,11 @@
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2]).
 
+%%%-------------------------------------------------------------------
+%%% scribbles file watcher.
+%%% This module is responsible for watching the 'posts' directory for changes.
+%%% When a change is detected, it tells the builder to rebuild the documentation.       
+
 start_link(Path) ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, Path, []).
 

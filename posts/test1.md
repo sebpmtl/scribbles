@@ -1,3 +1,6 @@
+---
+title: "My super malade DIY Erlang Blog"
+---
 
 # The Art of Doing Nothing: A Guide to Ultimate Productivity
 
