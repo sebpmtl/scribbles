@@ -1,96 +1,93 @@
 -module(scribbles_markdown).
 -export([run_build/0, split_file/1, get_val/3]).
 
-%%% Scribbles Markdown Engine.
-%%% Responsible for parsing Frontmatter and stitching together 
-%%% pure HTML binaries without heavy dependencies.
+%%% Scribbles Engine V3: Alphabetical Files, Chronological Masonry.
 
 run_build() ->
-    io:format("DEBUG: Version 2 - do_convert should be disabled~n"),
-    filelib:ensure_dir("compiled/dummy.txt"),
-    Files = filelib:wildcard("posts/*.md"),
-    io:format("Found ~p files to convert.~n", [length(Files)]),
-    
-    [try convert_file(F) 
-     catch C:R -> io:format("Error ~s: ~p:~p~n", [F, C, R]) 
-     end || F <- Files],
 
-    io:format("Build complete.~n"). %% Move to the very end of the function to ensure it runs regardless of errors in individual files. 
+    %% 1. Sync static assets first
+    sync_assets(),
+
+    filelib:ensure_dir("compiled/posts/dummy.txt"),
+    Files = filelib:wildcard("posts/*.md"),
+    io:format("Found ~p files. Scanning...~n", [length(Files)]),
     
+    %% 1. Scan and Parse (Alphabetical by filename)
+    AllData = [parse_post(F) || F <- Files],
     
+    %% 2. The Chronological Sort (Newest ISO dates first)
+    Posts = lists:sort(
+        fun(#{date := DateA}, #{date := DateB}) -> DateA > DateB end,
+        [P || P <- AllData, maps:get(draft, P) == false]
+    ),
+
+    %% 3. Generate Individual Post Pages (slug/index.html)
+    [render_post_page(P) || P <- Posts],
+
+    %% 4. Generate the Infinite Masonry Index
+    render_index_page(Posts),
+
+    io:format("Build complete: ~p posts published.~n", [length(Posts)]).
 
 %% --- Internals ---
 
-convert_file(Path) ->
+parse_post(Path) ->
     {ok, Raw} = file:read_file(Path),
-    case split_file(Raw) of
-        {<<>>, _Body} ->
-            %% This happens if the YAML header is missing or incomplete
-            io:format("  [Skip] No metadata found in ~s~n", [Path]),
-            ignore;
-        {Meta, Body} ->
-            %% Check draft status ONLY if Meta exists
-            DraftRaw = get_val(<<"draft">>, Meta, <<"false">>),
-            Draft = list_to_binary(string:to_lower(binary_to_list(re:replace(DraftRaw,
-                                <<"(?:^[ \t\r\n]+|[ \t\r\n]+$)">>,
-                                <<"">>,
-                                [global, {return, binary}])))),
-
-            case Draft of
-                <<"true">> ->
-                    io:format("  [Draft] Skipping ~s~n", [Path]),
-                    delete_output(Path),
-                    skip;
-                _ ->
-                    %% Only proceed to build if Meta is valid AND draft is not true
-                    do_convert(Path, Meta, Body)
-            end
-    end.
-
-do_convert(Path, Meta, Body) ->
-    io:format("  Processing ~s...~n", [Path]),
-    Title = get_val(<<"title">>, Meta, <<"Untitled">>),
-    Date = get_val(<<"date">>, Meta, <<"Unknown">>),
+    {Meta, Body} = split_file(Raw),
     
-    HtmlBody = list_to_binary(markdown:conv(binary_to_list(Body))),
+    %% Fallback: Today's ISO date
+    {{Y, M, D}, _} = calendar:local_time(),
+    Today = iolist_to_binary(io_lib:format("~4..0w-~2..0w-~2..0w", [Y, M, D])),
+
+    %% Slug is strictly the filename (minus .md)
+    Slug = filename:basename(Path, <<".md">>),
+
+    #{
+        title => get_val(<<"title">>, Meta, <<"Untitled">>),
+        date  => get_val(<<"date">>, Meta, Today),
+        slug  => Slug,
+        body  => Body,
+        draft => (string:trim(string:lowercase(get_val(<<"draft">>, Meta, <<"false">>))) == <<"true">>)
+    }.
+
+render_post_page(#{slug := Slug, title := T, date := D, body := B}) ->
+    io:format("  [Post] /posts/~s/~n", [Slug]),
     
-    FinalHtml = << (scribbles_templates:header(Title, Date))/binary, 
+    HtmlBody = list_to_binary(markdown:conv(binary_to_list(B))),
+    
+    %% Wrap in layout
+    FinalHtml = << (scribbles_templates:header(T, D))/binary, 
                    HtmlBody/binary, 
                    (scribbles_templates:footer())/binary >>,
 
-    Base = case filename:basename(Path, <<".md">>) of
-        B when is_binary(B) -> B;
-        L -> list_to_binary(L)
-    end,
+    %% Ensure directory: compiled/posts/slug/
+    PostDir = filename:join([<<"compiled">>, <<"posts">>, Slug]),
+    filelib:ensure_dir(filename:join(PostDir, <<"index.html">>)),
     
-    file:write_file(filename:join(<<"compiled">>, <<Base/binary, ".html">>), FinalHtml).
+    file:write_file(filename:join(PostDir, <<"index.html">>), FinalHtml).
 
-%%  Remove target HTML output when a post is marked draft.
-delete_output(Path) ->
-    OutName = output_name(Path),
-    OutPath = filename:join(<<"compiled">>, OutName),
-    case file:delete(OutPath) of
-        ok -> ok;
-        {error, enoent} -> ok;
-        {error, Reason} -> io:format("  [Draft] Failed deleting ~s: ~p~n", [OutPath, Reason])
-    end.
+render_index_page(Posts) ->
+    io:format("  [Index] Generating Masonry Home...~n"),
+    
+    GridHtml = scribbles_templates:masonry_grid(Posts),
+    
+    IndexHtml = << (scribbles_templates:header(<<"Home">>, <<"">>))/binary, 
+                   GridHtml/binary, 
+                   (scribbles_templates:footer())/binary >>,
+    
+    file:write_file(<<"compiled/index.html">>, IndexHtml).
 
-output_name(Path) ->
-    Base = case filename:basename(Path, <<".md">>) of
-        B when is_binary(B) -> B;
-        L -> list_to_binary(L)
-    end,
-    <<Base/binary, ".html">>.
+%% --- Utilities ---
 
-%%  Separates YAML frontmatter from the markdown body.
 split_file(Binary) ->
-    case re:run(Binary, <<"---(?:\r?\n)(.*?)(?:\r?\n)---(?:\r?\n)(.*)$">>, 
-                [dotall, {capture, all_but_first, binary}]) of
+    %% The 'U' (ungreedy) option is key here.
+    %% It ensures we stop at the first '---' after the header starts.
+    case re:run(Binary, <<"^---(?:\r?\n)(.*?)(?:\r?\n)---(?:\r?\n)(.*)$">>, 
+                [dotall, ungreedy, {capture, all_but_first, binary}]) of
         {match, [Meta, Body]} -> {Meta, Body};
         nomatch -> {<<>>, Binary}
     end.
 
-%%  Extracts a specific key's value from the frontmatter binary.
 get_val(Key, Meta, Default) ->
     Pattern = <<Key/binary, <<":[ \\t]*\"?(.*?)\"?(?:\r?\n|$)">>/binary>>,
     case re:run(Meta, Pattern, [{capture, all_but_first, binary}]) of
@@ -98,3 +95,30 @@ get_val(Key, Meta, Default) ->
         nomatch -> Default
     end.
 
+sync_assets() ->
+    io:format("  [Sync] Mapping priv/ to compiled/assets/...~n"),
+    
+    %% We want everything INSIDE priv/ to end up in compiled/assets/
+    Files = filelib:wildcard("priv/**"),
+    
+    [begin
+        %% Strip the "priv/" prefix from the path
+        RelativePath = re:replace(F, "^priv/", "", [{return, list}]),
+        
+        %% New destination: compiled/assets/ + whatever was in priv
+        Target = filename:join(["compiled", "assets", RelativePath]),
+        
+        case filelib:is_dir(F) of
+            true -> 
+                filelib:ensure_dir(filename:join(Target, "dummy.txt"));
+            false -> 
+
+            filelib:ensure_dir(Target),
+                case file:copy(F, Target) of
+                    {ok, _} -> 
+                        io:format("  [OK] ~s -> ~s~n", [F, Target]);
+                    {error, R} -> 
+                        io:format("  [!] Failed ~s: ~p~n", [F, R])
+                end
+        end
+     end || F <- Files].
