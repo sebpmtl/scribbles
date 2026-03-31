@@ -53,10 +53,11 @@ parse_post(Path) ->
 render_post_page(#{slug := Slug, title := T, date := D, body := B}) ->
     io:format("  [Post] /posts/~s/~n", [Slug]),
     
-    HtmlBody = list_to_binary(markdown:conv(binary_to_list(B))),
+    HtmlBody0 = list_to_binary(markdown:conv_utf8(binary_to_list(B))),
+    HtmlBody = rewrite_image_paths(HtmlBody0),
     
     %% Wrap in layout
-    FinalHtml = << (scribbles_templates:header(T, D))/binary, 
+    FinalHtml = << (scribbles_templates:render_header(post, T, D))/binary, 
                    HtmlBody/binary, 
                    (scribbles_templates:footer())/binary >>,
 
@@ -71,13 +72,29 @@ render_index_page(Posts) ->
     
     GridHtml = scribbles_templates:masonry_grid(Posts),
     
-    IndexHtml = << (scribbles_templates:header(<<"Home">>, <<"">>))/binary, 
+    IndexHtml = << (scribbles_templates:render_header(home, <<"Scribbles">>, <<"">>))/binary, 
                    GridHtml/binary, 
                    (scribbles_templates:footer())/binary >>,
     
     file:write_file(<<"compiled/index.html">>, IndexHtml).
 
-%% --- Utilities ---
+rewrite_image_paths(Body) ->
+    case scribbles_assets:image_program() of
+        {ok, _} ->
+            Pattern = <<"<img([^>]*?)src=(['\"])(?:\.\./)?priv/static/img/([^'\">]+?)(?:\.(?:jpg|jpeg|png))\\2([^>]*)>">>,
+            Replacement = <<"<img\\1src=\\2/assets/static/img/\\3-lg.webp\\2\\4 srcset=\\2/assets/static/img/\\3-thumb.webp 64w, /assets/static/img/\\3-lg.webp 1200w\\2 sizes=\\\"(max-width: 600px) 100vw, 1200px\\\">">>,
+            re:replace(Body, Pattern, Replacement, [global, {return, binary}]);
+        {error, no_imagemagick} ->
+            Pattern = <<"<img([^>]*?)src=(['\"])(?:\.\./)?priv/static/img/([^'\">]+?)(?:\.(?:jpg|jpeg|png))\\2([^>]*)>">>,
+            Replacement = <<"<img\\1src=\\2/assets/static/img/\\3.jpg\\2\\4">>,
+            re:replace(Body, Pattern, Replacement, [global, {return, binary}])
+    end.
+
+skip_raw_image(F) ->
+    case re:run(F, "^priv/static/img/.*\\.(?:jpg|jpeg|png)$", [caseless]) of
+        {match, _} -> true;
+        nomatch -> false
+    end.
 
 split_file(Binary) ->
     %% The 'U' (ungreedy) option is key here.
@@ -97,7 +114,8 @@ get_val(Key, Meta, Default) ->
 
 sync_assets() ->
     io:format("  [Sync] Mapping priv/ to compiled/assets/...~n"),
-    
+    scribbles_assets:process_images("priv/static/img", "compiled/assets/static/img"),
+
     %% We want everything INSIDE priv/ to end up in compiled/assets/
     Files = filelib:wildcard("priv/**"),
     
@@ -112,13 +130,17 @@ sync_assets() ->
             true -> 
                 filelib:ensure_dir(filename:join(Target, "dummy.txt"));
             false -> 
-
-            filelib:ensure_dir(Target),
-                case file:copy(F, Target) of
-                    {ok, _} -> 
-                        io:format("  [OK] ~s -> ~s~n", [F, Target]);
-                    {error, R} -> 
-                        io:format("  [!] Failed ~s: ~p~n", [F, R])
+                case skip_raw_image(F) of
+                    true -> ok;
+                    false ->
+                        filelib:ensure_dir(Target),
+                        case file:copy(F, Target) of
+                            {ok, _} -> 
+                                io:format("  [OK] ~s -> ~s~n", [F, Target]);
+                            {error, R} -> 
+                                io:format("  [!] Failed ~s: ~p~n", [F, R])
+                        end
                 end
         end
      end || F <- Files].
+

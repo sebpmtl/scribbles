@@ -54,6 +54,9 @@ body {
     font-size: 0.85rem;
 }
 
+header h1 {
+    font: bold 3rem 'silkscreen', monospace;
+}
 .post-card h2 { 
     margin: 0 0 1rem 0; 
     font-size: 1.25rem; 
@@ -68,6 +71,54 @@ body {
     margin: 0;
 }
 
+main {
+    margin-top: 50px;
+}
+
+.post {
+    max-width: 900px;
+    margin: 50px auto 0;
+    padding: 0 20px;
+}
+
+.post + footer {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+    text-align: left;
+}
+
+header {
+    text-align: center;
+}
+
+header h1 a, 
+header h1 a:visited {
+    color: #ffffff; /* Or whatever your primary accent color is */
+    text-decoration: none;
+}
+
+header nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+}
+
+header nav a {
+    text-decoration: none;
+    font-family: 'Silkscreen', cursive;
+    font-size: 0.8rem;
+    color: #888; /* Dimmed until hover */
+}
+
+header nav a:hover {
+    color: #fff;
+    background: #333; /* Blocky highlight effect */
+}
+
 /* --- Responsive Breakpoints --- */
 @media (max-width: 1100px) { 
     .masonry-container { column-count: 2; } 
@@ -78,4 +129,44 @@ body {
         column-count: 1; 
         width: 100%; 
     } 
+    header nav ul {
+        gap: 20px; /* Bring links closer so they don't hit the screen edges */
+    }
+    header h1 {
+        font-size: 2rem; /* Shrink the logo slightly for mobile */
+    }
+    body {
+        padding: 1rem; /* Gain more horizontal space for your content */
+    }
 }
+
+
+
+/* --- Post Images (The Technical Vibe) --- */
+
+.post-content img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #333;
+    background: var(--card-bg);
+    margin: 2rem auto;
+    display: block;
+}
+
+/* Optional: Make all technical schematics use the "crunchy" scaling */
+.post-content img[src*="-thumb.webp"] {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    width: 64px;
+    height: 64px;
+    border-radius: 4px;
+}
+
+/* Optional: Add a subtle grid-notebook feel to image placeholders */
+.post-content p img {
+    background-image: linear-gradient(#1e1e1e 1px, transparent 1px),
+                      linear-gradient(90deg, #1e1e1e 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-color: var(--bg);
+}
+
