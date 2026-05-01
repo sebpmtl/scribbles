@@ -4,15 +4,18 @@
 render_header(PageType, Title, DateHtml) ->
     %% Only show the Title and Date if we are on a post
     MetaBlock = case PageType of
-        home -> <<>>; 
-        post -> 
-            << "<h2>", Title/binary, "</h2>", 
-               "<span class='post-date'>", DateHtml/binary, "</span>" >>
+        home -> <<>>;
+        post ->
+            << "<h2>", Title/binary, "</h2>",
+               "<time>", DateHtml/binary, "</time>" >>;
+        contact -> <<>>
     end,
 
-    MainClass = case PageType of
-        home -> <<>>;
-        post -> <<" class='post'">>
+    BodyAttr =
+    case PageType of
+        home -> ~" data-page='home'";
+        post -> ~" data-page='post'";
+        contact -> ~" data-page='contact'"
     end,
 
     <<
@@ -27,48 +30,50 @@ render_header(PageType, Title, DateHtml) ->
       "</head><body>"
       "<header>"
         "<h1><a href='/'>SCRIBBLES</a></h1>"
-        , MetaBlock/binary, 
+        , MetaBlock/binary,
         "<nav><ul>"
           "<li><a href='/'>home</a></li>"
-          "<li><a href='/music.html'>music</a></li>"
+          "<li><a href= '/music.html'>music</a></li>"
           "<li><a href='/about.html'>about</a></li>"
           "<li><a href='/contact.html'>contact</a></li>"
         "</ul></nav>"
       "</header>"
-      "<main", MainClass/binary, ">"
+      "<main", BodyAttr/binary, ">"
     >>.
 
 footer() ->
-    <<"</main><footer>&copy; 2026 Scribbles</footer></body></html>">>.
+    ~"</main><footer>&copy; 2026 Scribbles</footer></body></html>".
 
 masonry_grid(Posts) ->
     %% Start the container
     Items = [render_card(P) || P <- Posts],
-    << "<div class='masonry-container'>", (iolist_to_binary(Items))/binary, "</div>" >>.
+    << "<div class='masonry'>", (iolist_to_binary(Items))/binary, "</div>" >>.
 
 render_card(#{title := T, date := D, slug := S, body := B}) ->
     %% 1. Strip ALL newlines and carriage returns globally
     %% This turns the whole post into one long single-line string.
-    FlatBody = re:replace(B, <<"[\\r\\n]+">>, <<" ">>, [global, {return, binary}]),
-    
+    FlatBody = re:replace(B, ~"[\\r\\n]+", ~" ", [global, {return, binary}]),
+
     %% 2. Trim and force to binary
     TrimmedBody = case unicode:characters_to_binary(string:trim(FlatBody)) of
         Bin when is_binary(Bin) -> Bin;
-        _ -> << "Encoding Error" >>
+        _ -> ~"Encoding Error"
     end,
-    
+
     %% 3. Slice the first 200 characters
     Teaser = case byte_size(TrimmedBody) > 200 of
         true -> <<(binary:part(TrimmedBody, 0, 200))/binary, "...">>;
         false -> TrimmedBody
     end,
-    
+
     %% 4. Assemble the HTML
     %% Note: We use a <span> or just raw text inside the <a> to prevent block-level issues
     <<
-      "<a href='/posts/", S/binary, "/' class='post-card'>",
+     "<article>",
+      "<a href='/posts/", S/binary, "/'>",
         "<time>", D/binary, "</time>",
         "<h2>", T/binary, "</h2>",
-        "<span class='teaser-text'>", Teaser/binary, "</span>",
-      "</a>"
+        "<p>", Teaser/binary, "</p>",
+      "</a>",
+      "</article>"
     >>.

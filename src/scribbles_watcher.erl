@@ -10,7 +10,7 @@
 %%%-------------------------------------------------------------------
 %%% scribbles file watcher.
 %%% This module is responsible for watching the 'posts' directory for changes.
-%%% When a change is detected, it tells the builder to rebuild the documentation.       
+%%% When a change is detected, it tells the builder to rebuild the site.
 
 start_link(Path) ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, Path, []).
@@ -18,7 +18,7 @@ start_link(Path) ->
 init(Path) ->
     %% Start polling every 1000ms
     timer:send_interval(1000, tick),
-    %% We initialize last_mod to the current time so it doesn't 
+    %% We initialize last_mod to the current time so it doesn't
     %% double-build immediately on startup if you don't want it to.
     {ok, #{path => Path, last_mod => filelib:last_modified(Path)}}.
 
@@ -26,19 +26,19 @@ init(Path) ->
 handle_info(tick, State = #{path := Path, last_mod := LastMod}) ->
     %% 1. Force everything to a list (String) to satisfy the type checker
     SearchPath = binary_to_list(iolist_to_binary(filename:join(Path, "*.md"))),
-    
+
     %% 2. Now filelib:wildcard is 100% happy with a string()
     Files = filelib:wildcard(SearchPath),
-    
+
     CurrentMaxMod = case Files of
         [] -> 0;
         _ -> lists:max([filelib:last_modified(F) || F <- Files])
     end,
-    
+
     case CurrentMaxMod > LastMod of
         true ->
             io:format("Watcher: Change detected in ~s~n", [Path]),
-            timer:sleep(100), 
+            timer:sleep(100),
             scribbles_builder:rebuild(),
             {noreply, State#{last_mod := CurrentMaxMod}};
         false ->

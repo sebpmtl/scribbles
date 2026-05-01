@@ -30,7 +30,7 @@ process_individual_image(Cmd, SrcPath, DestBase) ->
 
     %% 1. Check/Update Thumbnail
     case needs_update(SrcPath, ThumbDest) of
-        true -> 
+        true ->
             io:format("  [MAGICK] ~s -> Thumb~n", [BaseName]),
             generate_thumb(Cmd, SrcPath, ThumbDest);
         false -> ok
@@ -38,7 +38,7 @@ process_individual_image(Cmd, SrcPath, DestBase) ->
 
     %% 2. Check/Update Large Image
     case needs_update(SrcPath, LargeDest) of
-        true -> 
+        true ->
             io:format("  [MAGICK] ~s -> Large~n", [BaseName]),
             generate_large(Cmd, SrcPath, LargeDest);
         false -> ok
@@ -61,8 +61,6 @@ copy_raw_image(SrcPath, DestBase) ->
 
 %% --- ImageMagick Shell Wrappers ---
 
-%% --- ImageMagick Shell Wrappers ---
-
 generate_thumb(Cmd, Src, Dest) ->
     %% Using 64x64^ and extent ensures a perfect square even if the source is a rectangle
     Command = Cmd ++ " \"" ++ Src ++ "\" -resize 64x64^ -gravity center -extent 64x64 -colors 16 \"" ++ Dest ++ "\"",
@@ -70,10 +68,10 @@ generate_thumb(Cmd, Src, Dest) ->
 
 generate_large(Cmd, Src, Dest) ->
     %% The \">\" ensures the shell doesn't interpret > as a file redirection
-    Command = Cmd ++ " \"" ++ Src ++ "\" -resize \"1200x>\" -quality 82 \"" ++ Dest ++ "\"",
+    Command = Cmd ++ " \"" ++ Src ++ "\" -resize 900x -quality 82 \"" ++ Dest ++ "\"",
     os:cmd(Command).
 
-image_program() ->
+    image_program() ->
     case os:type() of
         {unix, _} ->
             %% Finds the absolute path to the binary
@@ -92,5 +90,8 @@ image_program() ->
         _ -> {error, no_imagemagick}
     end.
 
-normalize_path(Path) when is_binary(Path) -> binary_to_list(Path);
-normalize_path(Path) -> Path.
+normalize_path(Path) when is_binary(Path) ->
+    binary_to_list(Path);
+
+normalize_path(Path) ->
+    Path.
