@@ -72,6 +72,12 @@ header nav a:hover {
     margin: 0 auto;
 }
 
+.masonry article {
+    display: inline-block;
+    width: 100%;
+    break-inside: avoid;
+    padding-bottom: 2.5rem; /* spacing INSIDE column flow */
+}
 /* homepage cards */
 main[data-page="home"] article a {
     display: block;
@@ -92,7 +98,7 @@ main[data-page="home"] article a:hover {
 }
 
 /* card typography */
-body[data-page="home"] time {
+main[data-page="home"] time {
     font-family: var(--font-mono);
     color: var(--accent);
     display: block;
@@ -100,13 +106,13 @@ body[data-page="home"] time {
     font-size: 0.85rem;
 }
 
-body[data-page="home"] h2 {
+main[data-page="home"] h2 {
     margin: 0 0 1rem;
     font-size: 1.25rem;
     line-height: 1.2;
 }
 
-body[data-page="home"] p {
+main[data-page="home"] p {
     font-size: 0.9rem;
     line-height: 1.5;
     opacity: 0.8;
@@ -115,14 +121,14 @@ body[data-page="home"] p {
 
 /* ---------------- POST PAGE ---------------- */
 
-body[data-page="post"] article {
+main[data-page="post"] {
     max-width: 900px;
-    margin: 50px auto 0;
+    margin: 80px auto 0;
     padding: 0 20px;
     text-align: left;
 }
 
-body[data-page="post"] img {
+main[data-page="post"] img {
     max-width: 100%;
     height: auto;
     border: 1px solid #333;
@@ -132,7 +138,7 @@ body[data-page="post"] img {
 }
 
 /* pixel thumbnails */
-body[data-page="post"] img[src*="-thumb.webp"] {
+main[data-page="post"] img[src*="-thumb.webp"] {
     image-rendering: pixelated;
     image-rendering: crisp-edges;
     width: 64px;
@@ -140,18 +146,9 @@ body[data-page="post"] img[src*="-thumb.webp"] {
     border-radius: 4px;
 }
 
-/* subtle schematic grid */
-body[data-page="post"] p img {
-    background-image:
-        linear-gradient(#1e1e1e 1px, transparent 1px),
-        linear-gradient(90deg, #1e1e1e 1px, transparent 1px);
-    background-size: 20px 20px;
-    background-color: var(--bg);
-}
-
 /* ---------------- CONTACT PAGE ---------------- */
 
-body[data-page="contact"] main {
+main[data-page="contact"] {
     max-width: 900px;
     margin: 50px auto 0;
     padding: 2rem 2rem 3rem;
@@ -160,20 +157,20 @@ body[data-page="contact"] main {
     border-radius: 1rem;
 }
 
-body[data-page="contact"] ul {
+main[data-page="contact"] ul {
     list-style: none;
     padding: 0;
     display: grid;
     gap: 1rem;
 }
 
-body[data-page="contact"] a {
+main[data-page="contact"] a {
     color: var(--accent);
     text-decoration: none;
     font-weight: bold;
 }
 
-body[data-page="contact"] a:hover {
+main[data-page="contact"] a:hover {
     color: #fff;
 }
 
