@@ -1,12 +1,11 @@
 {application, scribbles, [
-    {description, "An OTP application"},
+    {description, "A punk rock static site generator"},
     {vsn, "0.1.0"},
     {registered, []},
     {mod, {scribbles_app, []}},
     {applications, [
         kernel,
-        stdlib,
-        markdown
+        stdlib
     ]},
     {env, []},
     {modules, []},
