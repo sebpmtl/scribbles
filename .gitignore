@@ -19,4 +19,13 @@ logs
 rebar3.crashdump
 *~
 compiled/
+doc/
 rebar.lock
+.zed
+
+# NIF artifacts
+*.so
+*.o
+*.d
+*.dll
+*.dylib
