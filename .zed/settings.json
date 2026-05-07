@@ -1,7 +1,0 @@
-{
-    "languages": {
-        "Erlang": {
-            "language_servers": ["elp", "!erlang-ls", "..."]
-        }
-    }
-}
