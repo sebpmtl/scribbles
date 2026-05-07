@@ -17,7 +17,7 @@ run_build() ->
 
     [render_post_page(P) || P <- Posts],
     render_index_page(Posts),
-    render_contact_page(),
+    render_archive_page(Posts),
 
     io:format("Build complete: ~p posts published.~n", [length(Posts)]).
 
@@ -66,19 +66,25 @@ render_index_page(Posts) ->
     ],
     file:write_file(~"compiled/index.html", IndexHtml).
 
-render_contact_page() ->
-    io:format("  [Contact] Generating contact.html~n"),
+    render_archive_page(Posts) ->
+        io:format("  [Archive] Generating archive.html~n"),
 
-    Body = [
-        ~"<section><h3>Contact</h3>",
-        ~"<p>Find me online:</p><ul>",
-        ~"<li><a href='https://github.com/your-handle'>github</a></li>",
-        ~"<li><a href='/rss.xml'>rss</a></li></ul></section>"
-    ],
+        %% Create the list items by iterating over the list of maps
+        ListItems = [
+            [
+                ~"<li>",
+                ~"<a href='/posts/", Slug, ~"/'>",
+                ~"<time>", D, ~"</time> ", T,
+                ~"</a>",
+                ~"</li>"
+            ] || #{slug := Slug, title := T, date := D} <- Posts
+        ],
 
-    ContactHtml = [
-        scribbles_templates:render_header(contact, ~"Contact", ~""),
-        Body,
-        scribbles_templates:footer()
-    ],
-    file:write_file(~"compiled/contact.html", ContactHtml).
+        Body = [~"<ul>", ListItems, ~"</ul>"],
+
+        ArchiveHtml = [
+            scribbles_templates:render_header(archive, ~"Archive", ~""),
+            Body,
+            scribbles_templates:footer()
+        ],
+        file:write_file(~"compiled/archive.html", ArchiveHtml).
