@@ -18,8 +18,8 @@ logs
 *.iml
 rebar3.crashdump
 *~
-compiled/
-doc/
+compiled
+doc
 rebar.lock
 .zed
 

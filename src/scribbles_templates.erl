@@ -8,13 +8,13 @@ render_header(PageType, Title, DateHtml) ->
         post ->
             [~"<h2>", Title, ~"</h2>",
              ~"<time>", DateHtml, ~"</time>"];
-        contact -> []
+        archive -> []
     end,
 
     BodyAttr = case PageType of
         home -> ~" data-page='home'";
         post -> ~" data-page='post'";
-        contact -> ~" data-page='contact'"
+        archive -> ~" data-page='archive'"
     end,
 
     %% The whole return value is one large IO List
@@ -25,12 +25,12 @@ render_header(PageType, Title, DateHtml) ->
       ~"</head><body>",
       ~"<header>",
         ~"<h1><a href='/'>SCRIBBLES</a></h1>",
-        MetaBlock,
         ~"<nav><ul>",
           ~"<li><a href='/'>home</a></li>",
-          ~"<li><a href='/music.html'>music</a></li>",
+          ~"<li><a href='/archive.html'>archive</a></li>",
           ~"<li><a href='/about.html'>about</a></li>",
         ~"</ul></nav>",
+       MetaBlock,
       ~"</header>",
       ~"<main", BodyAttr, ~">"
     ].

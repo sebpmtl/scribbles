@@ -1,5 +1,5 @@
 -module(scribbles_assets).
--export([process_images/2, image_program/0]).
+-export([process_images/2, image_program/0, sync_assets/0]).
 
 %% Entry point: Scans SourceBase, puts optimized WebP into DestBase
 process_images(SourceBase, DestBase) ->
@@ -95,3 +95,30 @@ normalize_path(Path) when is_binary(Path) ->
 
 normalize_path(Path) ->
     Path.
+
+    %% --- Helpers ---
+
+    sync_assets() ->
+        io:format("  [Sync] Mapping priv/ to compiled/assets/...~n"),
+        scribbles_assets:process_images("priv/static/img", "compiled/assets/static/img"),
+
+        Files = filelib:wildcard("priv/**"),
+        [copy_asset(F) || F <- Files].
+
+    copy_asset(Src) ->
+        RelPath = re:replace(Src, "^priv/", "", [{return, list}]),
+        Target = filename:join(["compiled", "assets", RelPath]),
+
+        case filelib:is_dir(Src) of
+            true -> filelib:ensure_dir(filename:join(Target, "dummy.txt"));
+            false ->
+                case is_raw_image(Src) of
+                    true -> ok;
+                    false ->
+                        filelib:ensure_dir(Target),
+                        file:copy(Src, Target)
+                end
+        end.
+
+    is_raw_image(F) ->
+        re:run(F, "\\.(?:jpg|jpeg|png)$", [caseless]) /= nomatch.
