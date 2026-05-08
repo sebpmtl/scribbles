@@ -18,10 +18,10 @@ logs
 *.iml
 rebar3.crashdump
 *~
-compiled
+compiled/
 doc
 rebar.lock
-.zed
+.zed/
 
 # NIF artifacts
 *.so

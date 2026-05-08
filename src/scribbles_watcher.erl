@@ -25,10 +25,12 @@ init(Path) ->
 %% This handles the 'tick' from our timer
 handle_info(tick, State = #{path := Path, last_mod := LastMod}) ->
     %% 1. Force everything to a list (String) to satisfy the type checker
-    SearchPath = binary_to_list(iolist_to_binary(filename:join(Path, "*.md"))),
+    SearchPath = [filename:join(P, "*.*") || P <- Path ],
 
     %% 2. Now filelib:wildcard is 100% happy with a string()
-    Files = filelib:wildcard(SearchPath),
+    Files = lists:append([filelib:wildcard(S) || S <- SearchPath]),
+
+    io:format("Files:  ~p~n",[Files]),
 
     CurrentMaxMod = case Files of
         [] -> 0;

@@ -1,7 +1,7 @@
 %%%-------------------------------------------------------------------
 %%% scribbles top level supervisor.
 %%% This is the root of our supervision tree. It starts the watcher and builder.
-%%% 
+%%%
 %%%-------------------------------------------------------------------
 
 -module(scribbles_sup).
@@ -40,7 +40,7 @@ init([]) ->
           restart => permanent},
 
         #{id => scribbles_watcher,
-          start => {scribbles_watcher, start_link, ["./posts"]}, %% Pass your source dir
+          start => {scribbles_watcher, start_link, [["./posts", "./priv/static/css"]]}, %% Pass your source dir
           restart => permanent}
     ],
 

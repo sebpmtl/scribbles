@@ -16,6 +16,9 @@ init([]) ->
     {ok, #{}}.
 
 handle_cast(build, State) ->
+    Module = scribbles_markdown,
+        %% 1. Clear out the 'old' version so we have room for the 'new' one
+        code:purge(Module),
     case code:load_file(scribbles_markdown) of
         {module, scribbles_markdown} ->
             ok;
